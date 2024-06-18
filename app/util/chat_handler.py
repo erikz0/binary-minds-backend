@@ -53,10 +53,12 @@ def handle_chat_request(data):
             prompt = f"""
             Here is the metadata from the dataset: {metadata_string}.
             Please generate JavaScript code using Chart.js to plot a graph based on the user's request: {user_message}.
+            The graph should have clearly labeled legends, clearly labeled axes and a sorted X-Axis.
             The code should use the variable 'dataset' (already defined in the outer scope) to reference the data, and ensure the code uses this variable to populate the chart.
             The code should be ready to execute in a React component and render the graph inside a given HTML container with id 'graph-container'.
             Ensure the code handles undefined or null values appropriately, avoiding errors such as trying to call methods on undefined or null values.
             Do not redeclare the 'dataset' variable in the code. Do not include import statements, React component definitions, or any other extraneous content. Only include the JavaScript code to initialize and render the chart inside the 'graph-container' element.
+            Before giving the Javascript code, could you also include a breif 1-2 sentence summary of the graph.
             """
 
             headers = {
@@ -72,7 +74,7 @@ def handle_chat_request(data):
                         {'role': 'system', 'content': 'You are a helpful assistant that creates custom code for graphing data.'},
                         {'role': 'user', 'content': prompt},
                     ],
-                    'max_tokens': 4096,
+                    'max_tokens': 1000,
                     'n': 1,
                     'stop': None,
                     'temperature': 0.2,
@@ -84,22 +86,26 @@ def handle_chat_request(data):
             bot_message = response_data['choices'][0]['message']['content'].strip()
             code_match = bot_message.split('```javascript')
 
-            logger.info(f"CHAT GPT CHAT RESPONSE: {response}")
+            logger.info(f"CHAT GPT CHAT RESPONSE: {response_data}")
             
             if len(code_match) > 1:
+                summary = code_match[0]
                 code = code_match[1].split('```')[0].strip()
             else:
+                summary = f'This is a graph for query: {user_message}'
                 code = bot_message
 
             code = code.replace("const ctx = document.getElementById('graph-container').getContext('2d');", '').strip()
 
-            return {'reply': bot_message, 'graphCode': code}
+            return {'reply': bot_message, 'graphCode': code, 'summary': summary}
         else:
 
             metadata_string = json.dumps(metadata)
 
             # If no graph is requested, just call ChatGPT with the user message.
             prompt = f"""
+            Please respond to the user message in plain text. Try to keep the message under 3 sentences, if possible.
+            This message will be displayed in a chatbox capable of only displaying plain text
             User message: "{user_message} Metadata for the dataset: {metadata_string}"
             """
 

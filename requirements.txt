@@ -1,0 +1,13 @@
+Flask[async]
+requests
+flask_cors
+typing
+openai==0.28
+python-dotenv
+twilio
+boto3
+hubspot-api-client
+beautifulsoup4
+nest_asyncio
+cachetools
+pyjwt
