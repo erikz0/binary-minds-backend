@@ -13,3 +13,4 @@ cachetools
 pyjwt
 matplotlib
 scipy
+pandas
