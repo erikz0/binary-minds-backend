@@ -2,6 +2,9 @@ import os
 import logging
 import jwt
 import datetime
+import re
+import pandas as pd
+import json  # Add this import
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from functools import wraps
@@ -74,18 +77,137 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/data/<path:filename>')
+def normalize_data(data):
+    char_map = {
+        '%': 'percent',
+        '&': 'and',
+        '<': 'less_than',
+        '>': 'greater_than',
+        '#': 'number',
+        '$': 'dollar',
+        '@': 'at',
+        '!': 'exclamation',
+        '^': 'caret',
+        '*': 'asterisk',
+        '(': 'left_parenthesis',
+        ')': 'right_parenthesis',
+        '+': 'plus',
+        '=': 'equals',
+        '{': 'left_curly_brace',
+        '}': 'right_curly_brace',
+        '[': 'left_square_bracket',
+        ']': 'right_square_bracket',
+        '|': 'pipe',
+        '\\': 'backslash',
+        ':': 'colon',
+        ';': 'semicolon',
+        '"': 'double_quote',
+        "'": 'single_quote',
+        ',': 'comma',
+        '.': 'dot',
+        '?': 'question_mark',
+        '/': 'slash'
+    }
+
+    def normalize_key(key):
+        key = key.strip().lower()
+        key = re.sub(r'[^a-zA-Z0-9]', lambda match: char_map.get(match.group(0), '_'), key)
+        if re.match(r'^[0-9]', key):
+            key = '_' + key
+        return key
+
+    def handle_nan(value):
+        if pd.isna(value):
+            return None
+        return value
+
+    normalized_data = []
+    for row in data:
+        normalized_row = {}
+        for key, value in row.items():
+            normalized_key = normalize_key(key)
+            if isinstance(value, str):
+                normalized_row[normalized_key] = value.strip().lower()
+            else:
+                normalized_row[normalized_key] = handle_nan(value)
+        normalized_data.append(normalized_row)
+
+    return normalized_data
+
+def generate_metadata_from_file(filepath):
+    data = pd.read_csv(filepath)
+    normalized_data = normalize_data(data.to_dict(orient='records'))
+    data = pd.DataFrame(normalized_data)
+    columns = data.columns
+    metadata = []
+    for column in columns:
+        column_data = data[column]
+        numeric_data = column_data.dropna().apply(pd.to_numeric, errors='coerce').dropna()
+        min_value = numeric_data.min() if not numeric_data.empty else None
+        max_value = numeric_data.max() if not numeric_data.empty else None
+        avg_value = numeric_data.mean() if not numeric_data.empty else None
+        unique_values = column_data.unique().tolist()
+        potential_values = [v if pd.notna(v) else None for v in unique_values if len(unique_values) <= 20] or None
+        metadata.append({
+            'name': column,
+            'type': str(column_data.dtype),
+            'min': min_value if min_value is None else float(min_value),
+            'max': max_value if max_value is None else float(max_value),
+            'avg': avg_value if avg_value is None else float(avg_value),
+            'count': int(len(column_data)),
+            'uniqueValues': int(len(unique_values)),
+            'potentialValues': potential_values
+        })
+    print(f"metadata: {metadata}")
+    return metadata
+
+def save_metadata(package, filename, metadata):
+    metadata_dir = os.path.join('data', package, 'metadata')
+    os.makedirs(metadata_dir, exist_ok=True)
+    metadata_path = os.path.join(metadata_dir, f"{filename}_metadata.json")
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata, f)
+    return metadata_path
+
+def save_normalized_data(package, filename, normalized_data):
+    normalized_data_dir = os.path.join('data', package, 'normalized_data')
+    os.makedirs(normalized_data_dir, exist_ok=True)
+    normalized_data_path = os.path.join(normalized_data_dir, f"{filename}_normalized.csv")
+    df = pd.DataFrame(normalized_data)
+    df.to_csv(normalized_data_path, index=False)
+    return normalized_data_path
+
+@app.route('/data/<package>/<filename>', methods=['GET'])
 @token_required
-def serve_data(filename):
-    return send_from_directory('data', filename)
+def serve_data(package, filename):
+    package_path = os.path.join('data', package, 'data')
+    return send_from_directory(package_path, filename)
+
+@app.route('/normalized-data/<package>/<filename>', methods=['GET'])
+@token_required
+def serve_normalized_data(package, filename):
+    data_path = os.path.join('data', package, 'data', filename)
+    data = pd.read_csv(data_path)
+    normalized_data = normalize_data(data.to_dict(orient='records'))
+    save_normalized_data(package, filename, normalized_data)
+    return jsonify(normalized_data)
+
+@app.route('/metadata/data/<package>/<filename>', methods=['GET'])
+@token_required
+def serve_metadata(package, filename):
+    data_path = os.path.join('data', package, 'data', filename)
+    metadata = generate_metadata_from_file(data_path)
+    save_metadata(package, filename, metadata)
+    return jsonify(metadata)
 
 @app.route('/bm-chat', methods=['POST'])
 @token_required
 def chat():
     logging.info("CHAT METHOD CALLED")
     data = request.get_json()
+    token = request.headers.get('Authorization').split(" ")[1]
     logging.info(f"Received data: {data}")
-    response = handle_chat_request(data)
+    response = handle_chat_request(token, data)
     return jsonify(response)
 
 @app.route('/data/list', methods=['GET'])
@@ -93,12 +215,27 @@ def chat():
 def list_data():
     data_directory = 'data'
     datasets = []
-    for filename in os.listdir(data_directory):
-        if filename.endswith('.csv'):
-            datasets.append({
-                'name': filename,
-                'description': f'Description for {filename}'
-            })
+    
+    for package in os.listdir(data_directory):
+        package_path = os.path.join(data_directory, package)
+        data_path = os.path.join(package_path, 'data')
+        if os.path.isdir(data_path):
+            description_file = os.path.join(package_path, 'description.txt')
+            data_files = [f for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f))]
+            
+            description = 'No description available'
+            if os.path.exists(description_file):
+                with open(description_file, 'r') as desc_file:
+                    description = desc_file.read().strip()
+            
+            for data_file in data_files:
+                if '.csv' in data_file:
+                    datasets.append({
+                        'package': package,
+                        'file': data_file,
+                        'description': description
+                    })
+    
     return jsonify(datasets)
 
 @app.route('/health')
@@ -128,7 +265,7 @@ def after_request(response):
     return response
 
 def main():
-    port = int(os.getenv('PORT', 8000))  # Get port from environment variable or fallback to 8000
+    port = int(os.getenv('PORT', 5000))  # Get port from environment variable or fallback to 5000
     print(f"Port: {port}")
 
     app.run(port=port, debug=True)

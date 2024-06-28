@@ -11,3 +11,5 @@ beautifulsoup4
 nest_asyncio
 cachetools
 pyjwt
+matplotlib
+scipy
