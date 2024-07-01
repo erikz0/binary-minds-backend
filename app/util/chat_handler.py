@@ -5,6 +5,7 @@ import logging
 import subprocess
 import tempfile
 import re
+import base64 
 
 logger = logging.getLogger(__name__)
 
@@ -78,10 +79,11 @@ def load_metadata(package, filename):
     else:
         raise FileNotFoundError(f"Metadata file not found for package {package} and filename {filename}")
 
-def handle_chat_request(session_id, data):
+def handle_chat_request(token, data):
     user_message = data['message']
     package = data['package']
     filename = data['filename']
+    session_id = data['package'].encode() + data['filename'].encode() + token
 
     print(f"Received message from user: {user_message}")
     print(f"Received package: {package}, filename: {filename}")
@@ -153,7 +155,7 @@ def handle_chat_request(session_id, data):
             session_context.append({'role': 'assistant', 'content': bot_message})
             session_contexts[session_id] = session_context
 
-            return {'reply': bot_message, 'graphCode': code, 'summary': summary}
+            return {'reply': bot_message, 'graphCode': code, 'summary': summary, 'sessionId': session_id}
         
         elif action_requested == 'GENERATE_PYTHON_CODE':
             prompt = f"""
@@ -257,7 +259,7 @@ dataset = pd.read_csv('{dataset_path}')
             session_context.append({'role': 'assistant', 'content': better_response})
             session_contexts[session_id] = session_context
 
-            return {'reply': better_response}
+            return {'reply': better_response, 'sessionId': session_id}
 
         else:
             # If no graph or python code is requested, just call ChatGPT with the user message.
@@ -298,7 +300,7 @@ dataset = pd.read_csv('{dataset_path}')
             session_context.append({'role': 'assistant', 'content': bot_message})
             session_contexts[session_id] = session_context
 
-            return {'reply': bot_message}
+            return {'reply': bot_message, 'sessionId': session_id}
     except Exception as e:
         logger.error(f"Error in handle_chat_request: {e}")
         return {'error': str(e)}

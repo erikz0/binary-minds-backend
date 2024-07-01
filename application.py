@@ -186,6 +186,10 @@ def serve_data(package, filename):
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_normalized_data(package, filename):
+    normalized_data_dir = os.path.join('data', package, 'normalized_data')
+    normalized_data_path = os.path.join(normalized_data_dir, f"{filename}_normalized.csv")
+    if os.path.exists(normalized_data_path):
+        return send_from_directory(normalized_data_dir, f"{filename}_normalized.csv")
     data_path = os.path.join('data', package, 'data', filename)
     data = pd.read_csv(data_path)
     normalized_data = normalize_data(data.to_dict(orient='records'))
@@ -195,6 +199,11 @@ def serve_normalized_data(package, filename):
 @app.route('/metadata/data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_metadata(package, filename):
+    metadata_path = os.path.join('data', package, 'metadata', f"{filename}_metadata.json")
+    if os.path.exists(metadata_path):
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+        return jsonify(metadata)
     data_path = os.path.join('data', package, 'data', filename)
     metadata = generate_metadata_from_file(data_path)
     save_metadata(package, filename, metadata)
