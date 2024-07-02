@@ -78,12 +78,21 @@ def load_metadata(package, filename):
         return metadata
     else:
         raise FileNotFoundError(f"Metadata file not found for package {package} and filename {filename}")
+    
+def string_to_base64(input_string):
+    # Convert the string to bytes
+    string_bytes = input_string.encode('utf-8')
+    # Encode the bytes to Base64
+    base64_bytes = base64.b64encode(string_bytes)
+    # Convert the Base64 bytes back to a string
+    base64_string = base64_bytes.decode('utf-8')
+    return base64_string
 
 def handle_chat_request(token, data):
     user_message = data['message']
     package = data['package']
     filename = data['filename']
-    session_id = data['package'].encode() + data['filename'].encode() + token
+    session_id = string_to_base64(data['package']) + string_to_base64(data['filename']) + token
 
     print(f"Received message from user: {user_message}")
     print(f"Received package: {package}, filename: {filename}")
