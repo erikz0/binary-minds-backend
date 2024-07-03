@@ -185,7 +185,7 @@ def serve_data(package, filename):
 
 @app.route('/data-info/<package>', methods=['GET'])
 @token_required
-def serve_data(package):
+def serve_datainfo(package):
     return send_from_directory(package, 'datainfo.pdf')
 
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
