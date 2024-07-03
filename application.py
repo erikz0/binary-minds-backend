@@ -183,6 +183,11 @@ def serve_data(package, filename):
     package_path = os.path.join('data', package, 'data')
     return send_from_directory(package_path, filename)
 
+@app.route('/data-info/<package>', methods=['GET'])
+@token_required
+def serve_data(package):
+    return send_from_directory(package, 'datainfo.pdf')
+
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_normalized_data(package, filename):
