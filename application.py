@@ -194,7 +194,8 @@ def serve_normalized_data(package, filename):
     data = pd.read_csv(data_path)
     normalized_data = normalize_data(data.to_dict(orient='records'))
     save_normalized_data(package, filename, normalized_data)
-    return jsonify(normalized_data)
+    print(f"Normalized data: {normalized_data}")  # Logging the normalized data
+    return jsonify(list(normalized_data)) 
 
 @app.route('/metadata/data/<package>/<filename>', methods=['GET'])
 @token_required
