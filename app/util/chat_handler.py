@@ -71,7 +71,9 @@ def check_if_action_requested(user_message):
         return 'DONT_GENERATE_GRAPH_OR_CODE'
 
 def load_metadata(package, filename):
+    filename = filename.replace(".csv", "")
     metadata_path = os.path.join('data', package, 'metadata', f"{filename}_metadata.json")
+    print(f"Metadata path: {metadata_path}")
     if os.path.exists(metadata_path):
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
@@ -164,7 +166,7 @@ def handle_chat_request(token, data):
             session_context.append({'role': 'assistant', 'content': bot_message})
             session_contexts[session_id] = session_context
 
-            return {'reply': bot_message, 'graphCode': code, 'summary': summary, 'sessionId': session_id}
+            return {'reply': bot_message, 'graphCode': code, 'summary': '', 'sessionId': session_id}
         
         elif action_requested == 'GENERATE_PYTHON_CODE':
             prompt = f"""
@@ -213,7 +215,7 @@ def handle_chat_request(token, data):
                 code = bot_message
 
             # Execute the generated Python code
-            dataset_path = os.path.join('data', package, 'normalized_data', f"{filename.replace('.csv', '')}.csv_normalized.csv")
+            dataset_path = os.path.join('data', package, 'normalized_data', f"{filename.replace('.csv', '')}_normalized.csv")
             dataset_path = dataset_path.replace('\\', '\\\\')  # Escape backslashes for Windows paths
             python_code = f"""
 import pandas as pd

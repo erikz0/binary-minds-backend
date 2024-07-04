@@ -9,6 +9,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from functools import wraps
 from app.util.chat_handler import handle_chat_request
+from app.util.ingest_data import ingest_new_data, save_metadata, save_normalized_data, generate_metadata_from_file, normalize_data
 
 application = app = Flask(__name__)
 
@@ -21,6 +22,8 @@ app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB limit
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+logger = logging.getLogger(__name__)
+
 # Secret key for JWT
 SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
 
@@ -31,6 +34,23 @@ def index():
 
 # Define your correct password
 CORRECT_PASSWORD = os.getenv('BM_PASSWORD')
+
+BINARYMINDS_API_KEY = 'bm'
+
+def check_internal_api_key(api_key_from_header):
+    
+    if not BINARYMINDS_API_KEY:
+        logger.info(f'Missing Internal API key from env')
+        return False
+    
+    if not api_key_from_header:
+        logger.info("BINARYMINDS-API-KEY not found in headers of payload")
+        return False
+
+    if api_key_from_header == BINARYMINDS_API_KEY:
+        return True
+    else:
+        return False
 
 @app.route('/check-bm-password', methods=['POST'])
 def check_bm_password():
@@ -77,105 +97,27 @@ def token_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def normalize_data(data):
-    char_map = {
-        '%': 'percent',
-        '&': 'and',
-        '<': 'less_than',
-        '>': 'greater_than',
-        '#': 'number',
-        '$': 'dollar',
-        '@': 'at',
-        '!': 'exclamation',
-        '^': 'caret',
-        '*': 'asterisk',
-        '(': 'left_parenthesis',
-        ')': 'right_parenthesis',
-        '+': 'plus',
-        '=': 'equals',
-        '{': 'left_curly_brace',
-        '}': 'right_curly_brace',
-        '[': 'left_square_bracket',
-        ']': 'right_square_bracket',
-        '|': 'pipe',
-        '\\': 'backslash',
-        ':': 'colon',
-        ';': 'semicolon',
-        '"': 'double_quote',
-        "'": 'single_quote',
-        ',': 'comma',
-        '.': 'dot',
-        '?': 'question_mark',
-        '/': 'slash'
-    }
+@app.route('/upload', methods=['POST'])
+def upload_file():
 
-    def normalize_key(key):
-        key = key.strip().lower()
-        key = re.sub(r'[^a-zA-Z0-9]', lambda match: char_map.get(match.group(0), '_'), key)
-        if re.match(r'^[0-9]', key):
-            key = '_' + key
-        return key
-
-    def handle_nan(value):
-        if pd.isna(value):
-            return None
-        return value
-
-    normalized_data = []
-    for row in data:
-        normalized_row = {}
-        for key, value in row.items():
-            normalized_key = normalize_key(key)
-            if isinstance(value, str):
-                normalized_row[normalized_key] = value.strip().lower()
-            else:
-                normalized_row[normalized_key] = handle_nan(value)
-        normalized_data.append(normalized_row)
-
-    return normalized_data
-
-def generate_metadata_from_file(filepath):
-    data = pd.read_csv(filepath)
-    normalized_data = normalize_data(data.to_dict(orient='records'))
-    data = pd.DataFrame(normalized_data)
-    columns = data.columns
-    metadata = []
-    for column in columns:
-        column_data = data[column]
-        numeric_data = column_data.dropna().apply(pd.to_numeric, errors='coerce').dropna()
-        min_value = numeric_data.min() if not numeric_data.empty else None
-        max_value = numeric_data.max() if not numeric_data.empty else None
-        avg_value = numeric_data.mean() if not numeric_data.empty else None
-        unique_values = column_data.unique().tolist()
-        potential_values = [v if pd.notna(v) else None for v in unique_values if len(unique_values) <= 20] or None
-        metadata.append({
-            'name': column,
-            'type': str(column_data.dtype),
-            'min': min_value if min_value is None else float(min_value),
-            'max': max_value if max_value is None else float(max_value),
-            'avg': avg_value if avg_value is None else float(avg_value),
-            'count': int(len(column_data)),
-            'uniqueValues': int(len(unique_values)),
-            'potentialValues': potential_values
-        })
-    print(f"metadata: {metadata}")
-    return metadata
-
-def save_metadata(package, filename, metadata):
-    metadata_dir = os.path.join('data', package, 'metadata')
-    os.makedirs(metadata_dir, exist_ok=True)
-    metadata_path = os.path.join(metadata_dir, f"{filename}_metadata.json")
-    with open(metadata_path, 'w') as f:
-        json.dump(metadata, f)
-    return metadata_path
-
-def save_normalized_data(package, filename, normalized_data):
-    normalized_data_dir = os.path.join('data', package, 'normalized_data')
-    os.makedirs(normalized_data_dir, exist_ok=True)
-    normalized_data_path = os.path.join(normalized_data_dir, f"{filename}_normalized.csv")
-    df = pd.DataFrame(normalized_data)
-    df.to_csv(normalized_data_path, index=False)
-    return normalized_data_path
+    bm_api_key = request.headers.get('BINARYMINDS-API-KEY')
+    if not (check_internal_api_key(bm_api_key)):
+        return jsonify({
+            "error": "Could not verify BinaryMinds API key"
+        }), 401
+    
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file and file.filename.endswith('.csv'):
+        package = request.form.get('package', 'default_package')
+        ingest_new_data(file, package)
+        
+        return jsonify({"message": "File processed successfully"}), 200
+    else:
+        return jsonify({"error": "Unsupported file type"}), 400
 
 @app.route('/data/<package>/<filename>', methods=['GET'])
 @token_required
@@ -191,20 +133,28 @@ def serve_datainfo(package):
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_normalized_data(package, filename):
+    filename = filename.replace(".csv", "")
     normalized_data_dir = os.path.join('data', package, 'normalized_data')
     normalized_data_path = os.path.join(normalized_data_dir, f"{filename}_normalized.csv")
+    print(f"normalized_data_path: {normalized_data_path}")
     if os.path.exists(normalized_data_path):
-        return send_from_directory(normalized_data_dir, f"{filename}_normalized.csv")
-    data_path = os.path.join('data', package, 'data', filename)
-    data = pd.read_csv(data_path)
-    normalized_data = normalize_data(data.to_dict(orient='records'))
-    save_normalized_data(package, filename, normalized_data)
-    print(f"Normalized data: {normalized_data}")  # Logging the normalized data
-    return jsonify(list(normalized_data)) 
+        print("Normal data exists")
+        data = pd.read_csv(normalized_data_path)
+        data = data.fillna('')  # Fill NaN with an empty string or another placeholder
+        normalized_data = data.to_dict(orient='records')
+    else:
+        data_path = os.path.join('data', package, 'data', filename)
+        data = pd.read_csv(data_path)
+        normalized_data = normalize_data(data.to_dict(orient='records'))
+        save_normalized_data(package, filename, normalized_data)
+        #print(f"Normalized data: {normalized_data}")  # Logging the normalized data
+    
+    return jsonify(normalized_data)
 
 @app.route('/metadata/data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_metadata(package, filename):
+    filename = filename.replace(".csv", "")
     metadata_path = os.path.join('data', package, 'metadata', f"{filename}_metadata.json")
     if os.path.exists(metadata_path):
         with open(metadata_path, 'r') as f:
@@ -235,20 +185,22 @@ def list_data():
         package_path = os.path.join(data_directory, package)
         data_path = os.path.join(package_path, 'data')
         if os.path.isdir(data_path):
-            description_file = os.path.join(package_path, 'description.txt')
+            title_file = os.path.join(package_path, 'title.txt')
             data_files = [f for f in os.listdir(data_path) if os.path.isfile(os.path.join(data_path, f))]
             
-            description = 'No description available'
-            if os.path.exists(description_file):
-                with open(description_file, 'r') as desc_file:
-                    description = desc_file.read().strip()
+            title = 'No description available'
+            if os.path.exists(title_file):
+                with open(title_file, 'r') as file:
+                    title = file.read().strip()
+
+            print(title)
             
             for data_file in data_files:
                 if '.csv' in data_file:
                     datasets.append({
                         'package': package,
                         'file': data_file,
-                        'description': description
+                        'title': title
                     })
     
     return jsonify(datasets)
