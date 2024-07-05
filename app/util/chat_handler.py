@@ -99,16 +99,17 @@ def handle_chat_request(token, data):
     print(f"Received message from user: {user_message}")
     print(f"Received package: {package}, filename: {filename}")
 
+    metadata = load_metadata(package, filename)
+    metadata_string = json.dumps(metadata)
+
     # Retrieve the session context or create a new one
     session_context = session_contexts.get(session_id, [
-        {"role": "system", "content": "You are an assistant built to help people analyze, generate graphs, and understand a dataset. You will be receiving the dataset's metadata with every message."}
+        {"role": "system", "content": f"You are an assistant built to help people analyze, generate graphs, and understand a dataset. This is the metadata of the dataset: {metadata_string}."}
     ])
 
     logger.info(f"Current session context: {session_context}")
 
     try:
-        metadata = load_metadata(package, filename)
-        metadata_string = json.dumps(metadata)
 
         action_requested = check_if_action_requested(user_message)
 
@@ -116,7 +117,7 @@ def handle_chat_request(token, data):
         
         if action_requested == 'GENERATE_GRAPH':
             prompt = f"""
-            Here is the metadata from the dataset: {metadata_string}.
+            Find the metadata of the dataset from previous context.
             Please generate JavaScript code using Chart.js to plot a graph based on the user's request: {user_message}.
             The graph should have clearly labeled legends, clearly labeled axes and a sorted X-Axis.
             The code should use the variable 'dataset' (already defined in the outer scope) to reference the data, and ensure the code uses this variable to populate the chart.
@@ -170,7 +171,7 @@ def handle_chat_request(token, data):
         
         elif action_requested == 'GENERATE_PYTHON_CODE':
             prompt = f"""
-            Here is the metadata from the dataset: {metadata_string}.
+            Find the metadata of the dataset from previous context.
             Please generate Python code to perform data analysis based on the user's request: {user_message}.
             The code should reference the pre-defined pandas dataframe 'dataset' (already defined in the outer scope).
             Ensure the code handles undefined or null values appropriately, avoiding errors such as trying to call methods on undefined or null values.
@@ -277,7 +278,7 @@ dataset = pd.read_csv('{dataset_path}')
             prompt = f"""
             Please respond to the user message in plain text. Try to keep the message under 3 sentences, if possible.
             This message will be displayed in a chatbox capable of only displaying plain text.
-            User message: "{user_message} Metadata for the dataset: {metadata_string}"
+            User message: "{user_message} Find the metadata of the dataset from previous context."
             """
 
             headers = {
