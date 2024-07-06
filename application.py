@@ -5,6 +5,8 @@ import datetime
 import re
 import pandas as pd
 import json  # Add this import
+from dotenv import load_dotenv
+load_dotenv()
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from functools import wraps
@@ -128,7 +130,8 @@ def serve_data(package, filename):
 @app.route('/data-info/<package>', methods=['GET'])
 @token_required
 def serve_datainfo(package):
-    return send_from_directory(package, 'datainfo.pdf')
+    datainfo_path = os.path.join('data', package)
+    return send_from_directory(datainfo_path, 'datainfo.md')
 
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
 @token_required
