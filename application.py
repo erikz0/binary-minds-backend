@@ -7,13 +7,13 @@ import pandas as pd
 import json  # Add this import
 from dotenv import load_dotenv
 load_dotenv()
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template
 from flask_cors import CORS
 from functools import wraps
 from app.util.chat_handler import handle_chat_request
 from app.util.ingest_data import ingest_new_data, save_metadata, save_normalized_data, generate_metadata_from_file, normalize_data
 
-application = app = Flask(__name__)
+application = app = Flask(__name__, static_folder='app/static/build')
 
 # Allow CORS for localhost and other origins
 cors = CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
@@ -33,6 +33,18 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your_secret_key')
 @app.route('/')
 def index():
     return "Hello Users of Binary Mind's API!"
+
+@app.route('/iced-data-analysis/', defaults={'path': ''})
+@app.route('/iced-data-analysis/<path:path>')
+def serve_react_app(path):
+    logger.info(f"Requested path: {path}")
+    full_path = os.path.join(app.static_folder, path)
+    logger.info(f"Full path: {full_path}")
+    
+    if path != "" and os.path.exists(full_path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 # Define your correct password
 CORRECT_PASSWORD = os.getenv('BM_PASSWORD')
