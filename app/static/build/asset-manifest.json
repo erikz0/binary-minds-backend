@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/iced-data-analysis/static/css/main.9bab1657.css",
-    "main.js": "/iced-data-analysis/static/js/main.2975029f.js",
+    "main.css": "/iced-data-analysis/static/css/main.a95bd4db.css",
+    "main.js": "/iced-data-analysis/static/js/main.70446770.js",
     "static/media/binary-insight-logo--.png": "/iced-data-analysis/static/media/binary-insight-logo--.14b6a792abdd221dae5e.png",
     "static/media/iced.png": "/iced-data-analysis/static/media/iced.bd12d5d2a788489d52fa.png",
     "index.html": "/iced-data-analysis/index.html",
-    "main.9bab1657.css.map": "/iced-data-analysis/static/css/main.9bab1657.css.map",
-    "main.2975029f.js.map": "/iced-data-analysis/static/js/main.2975029f.js.map"
+    "main.a95bd4db.css.map": "/iced-data-analysis/static/css/main.a95bd4db.css.map",
+    "main.70446770.js.map": "/iced-data-analysis/static/js/main.70446770.js.map"
   },
   "entrypoints": [
-    "static/css/main.9bab1657.css",
-    "static/js/main.2975029f.js"
+    "static/css/main.a95bd4db.css",
+    "static/js/main.70446770.js"
   ]
 }

@@ -15,10 +15,10 @@ session_contexts = {}
 def check_if_action_requested(user_message):
     prompt = f"""
     The user has sent the following message: "{user_message}".
-    Please include 'GENERATE_GRAPH' if the user's message explicitly requests a graph, 'GENERATE_PYTHON_CODE' if numerical analysis, calculations, or data manipulation using Python code could assist in answering the user's query, or 'DONT_GENERATE_GRAPH_OR_CODE' otherwise.
-    Only answer 'GENERATE_GRAPH' if a visualization is requested directly.
-    Answer 'GENERATE_PYTHON_CODE' if the user's query involves data analysis, calculations, or manipulations that require executing Python code.
-    Answer 'DONT_GENERATE_GRAPH_OR_CODE' if the user's query is general advice, questions about the data without the need for numerical analysis, or pertains to a graph or code without requiring their generation.
+    Please answer:
+    'GENERATE_GRAPH' if the user's message would be best answered by generating a graph
+    'GENERATE_PYTHON_CODE' if the user's message requires an operation done on the dataset to produce an answer
+    'DONT_GENERATE_GRAPH_OR_CODE' if the user's message doesn't require either a graph or analysis
     Please make sure your answer has this format: Answer: <answer>
     Please also include a brief explanation of your answer.
     """
@@ -90,6 +90,10 @@ def string_to_base64(input_string):
     base64_string = base64_bytes.decode('utf-8')
     return base64_string
 
+def trim_metadata(metadata):
+    trimmed_metadata = [{"name": col["name"], "type": col["type"]} for col in metadata]
+    return trimmed_metadata
+
 def handle_chat_request(token, data):
     user_message = data['message']
     package = data['package']
@@ -100,6 +104,7 @@ def handle_chat_request(token, data):
     print(f"Received package: {package}, filename: {filename}")
 
     metadata = load_metadata(package, filename)
+    metadata = trim_metadata(metadata)
     metadata_string = json.dumps(metadata)
 
     # Retrieve the session context or create a new one
@@ -148,6 +153,7 @@ def handle_chat_request(token, data):
             )
 
             response_data = response.json()
+            logger.info(response_data)
             bot_message = response_data['choices'][0]['message']['content'].strip()
             code_match = bot_message.split('```javascript')
 
@@ -194,7 +200,7 @@ def handle_chat_request(token, data):
                     'messages': session_context + [
                         {'role': 'user', 'content': prompt},
                     ],
-                    'max_tokens': 1000,
+                    'max_tokens': 2000,
                     'n': 1,
                     'stop': None,
                     'temperature': 0.2,
