@@ -109,7 +109,7 @@ def handle_chat_request(token, data):
 
     # Retrieve the session context or create a new one
     session_context = session_contexts.get(session_id, [
-        {"role": "system", "content": f"You are an assistant built to help people analyze, generate graphs, and understand a dataset. This is the metadata of the dataset: {metadata_string}."}
+        {"role": "system", "content": f"You are an friendly assistant built to help users understand and . This is the metadata of the dataset: {metadata_string}."}
     ])
 
     logger.info(f"Current session context: {session_context}")

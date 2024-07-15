@@ -130,7 +130,7 @@ Technical Information:
             'messages': [
                 {'role': 'user', 'content': prompt},
             ],
-            'max_tokens': 4000,
+            'max_tokens': 4096,
             'n': 1,
             'stop': None,
             'temperature': 0.2,
@@ -139,6 +139,7 @@ Technical Information:
     )
 
     response_data = response.json()
+    print(f"response_data: {response_data}")
     content = response_data['choices'][0]['message']['content'].strip()
     title = content.split('title:')[1].split('\n')[0].strip()
     information_sheet = content.split('information sheet:')[1].strip()
