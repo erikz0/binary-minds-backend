@@ -198,9 +198,17 @@ def ingest_new_data(file, package):
     save_metadata(title_dir, filename, metadata)
     save_normalized_data(title_dir, filename, normalized_data)
 
+    pdfs_dir = os.path.join(title_dir, 'pdfs')
+
+    os.makedirs(pdfs_dir, exist_ok=True)
+
     # Save title and information sheet
     with open(os.path.join(title_dir, 'title.txt'), 'w') as title_file:
         title_file.write(title)
+
+    # Save title and information sheet
+    with open(os.path.join(title_dir, 'summary.txt'), 'w') as summary_file:
+        summary_file.write("")
     
     with open(os.path.join(title_dir, 'datainfo.md'), 'w') as info_file:
         info_file.write(information_sheet)

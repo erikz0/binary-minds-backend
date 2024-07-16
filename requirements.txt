@@ -14,3 +14,5 @@ pyjwt
 matplotlib
 scipy
 pandas
+langchain
+langchain-community

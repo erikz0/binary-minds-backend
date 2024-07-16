@@ -1,24 +1,69 @@
-import requests
 import os
 import json
 import logging
+import requests
 import subprocess
 import tempfile
 import re
-import base64 
+import base64
+from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.document_loaders import PyPDFium2Loader
+from langchain.chains.question_answering import load_qa_chain
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import AIMessage, HumanMessage
 
 logger = logging.getLogger(__name__)
 
-# In-memory storage for session contexts
+# In-memory storage for session contexts and PDFQuery instances
 session_contexts = {}
+pdf_query_instances = {}
+
+class PDFQuery:
+    def __init__(self, openai_api_key=None) -> None:
+        self.embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
+        os.environ["ICED_DEMO_API_KEY"] = openai_api_key
+        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        self.llm = ChatOpenAI(temperature=0, openai_api_key=openai_api_key)
+        self.chain = None
+        self.db = None
+
+    def ask(self, question: str, chat_history: list) -> str:
+        if self.chain is None:
+            response = "Please, add a document."
+        else:
+            docs = self.db.get_relevant_documents(question)
+            response = self.chain.run(input_documents=docs, question=question, chat_history=chat_history)
+        return response
+
+    def ingest(self, file_path: os.PathLike) -> None:
+        loader = PyPDFium2Loader(file_path)
+        documents = loader.load()
+        splitted_documents = self.text_splitter.split_documents(documents)
+        self.db = Chroma.from_documents(splitted_documents, self.embeddings).as_retriever()
+        self.chain = load_qa_chain(self.llm, chain_type="stuff")
+
+    def ingest_folder(self, folder_path: os.PathLike) -> None:
+        for filename in os.listdir(folder_path):
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(folder_path, filename)
+                self.ingest(file_path)
+
+    def forget(self) -> None:
+        self.db = None
+        self.chain = None
 
 def check_if_action_requested(user_message):
     prompt = f"""
     The user has sent the following message: "{user_message}".
     Please answer:
-    'GENERATE_GRAPH' if the user's message would be best answered by generating a graph
-    'GENERATE_PYTHON_CODE' if the user's message requires an operation done on the dataset to produce an answer
-    'DONT_GENERATE_GRAPH_OR_CODE' if the user's message doesn't require either a graph or analysis
+    'GENERATE_GRAPH', if the user's message would be best answered by generating a graph.
+    'PREFORM_PYTHON_ANALYSIS', if the user's message would be best answered by running code to analyze the dataset, for all questions that require calculations done on the dataset.
+    'DONT_GENERATE_GRAPH_OR_CODE', otherwise.
     Please make sure your answer has this format: Answer: <answer>
     Please also include a brief explanation of your answer.
     """
@@ -48,32 +93,22 @@ def check_if_action_requested(user_message):
 
     gpt_response = response_data['choices'][0]['message']['content'].strip()
 
-    logger.info(f"GPT gpt_response to action request: {gpt_response}")
+    logger.info(f"GPT response to action request: {gpt_response}")
 
     answer_pattern = r"Answer: (\w+)"
     
-    # Search for the pattern in the text
     match = re.search(answer_pattern, gpt_response)
     
-    # If a match is found, return the captured group
     if match:
         answer = match.group(1)
     else:
         answer = 'DONT_GENERATE_GRAPH_OR_CODE'
 
-    if 'DONT_GENERATE_GRAPH_OR_CODE' in answer:
-        return 'DONT_GENERATE_GRAPH_OR_CODE'
-    elif 'GENERATE_GRAPH' in answer:
-        return 'GENERATE_GRAPH'
-    elif 'GENERATE_PYTHON_CODE' in answer:
-        return 'GENERATE_PYTHON_CODE'
-    else:
-        return 'DONT_GENERATE_GRAPH_OR_CODE'
+    return answer
 
 def load_metadata(package, filename):
     filename = filename.replace(".csv", "")
     metadata_path = os.path.join('data', package, 'metadata', f"{filename}_metadata.json")
-    print(f"Metadata path: {metadata_path}")
     if os.path.exists(metadata_path):
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
@@ -81,18 +116,26 @@ def load_metadata(package, filename):
     else:
         raise FileNotFoundError(f"Metadata file not found for package {package} and filename {filename}")
     
+def load_summary(package):
+    summary_path = os.path.join('data', package, "summary.txt")
+
+    logger.info(f"summary_path: {summary_path}")
+
+    if os.path.exists(summary_path):
+        with open(summary_path, 'r') as f:
+            summary = f.read()
+        return summary
+    else:
+        raise FileNotFoundError(f"Summary file not found for package {package}")
+
 def string_to_base64(input_string):
-    # Convert the string to bytes
     string_bytes = input_string.encode('utf-8')
-    # Encode the bytes to Base64
     base64_bytes = base64.b64encode(string_bytes)
-    # Convert the Base64 bytes back to a string
     base64_string = base64_bytes.decode('utf-8')
     return base64_string
 
 def trim_metadata(metadata):
-    trimmed_metadata = [{"name": col["name"], "type": col["type"]} for col in metadata]
-    return trimmed_metadata
+    return [{"name": col["name"], "type": col["type"]} for col in metadata]
 
 def handle_chat_request(token, data):
     user_message = data['message']
@@ -100,26 +143,31 @@ def handle_chat_request(token, data):
     filename = data['filename']
     session_id = string_to_base64(data['package']) + string_to_base64(data['filename']) + token
 
-    print(f"Received message from user: {user_message}")
-    print(f"Received package: {package}, filename: {filename}")
-
     metadata = load_metadata(package, filename)
     metadata = trim_metadata(metadata)
     metadata_string = json.dumps(metadata)
 
-    # Retrieve the session context or create a new one
+    summary = load_summary(package)
+
+    logger.info(f"Summary: {summary}")
+
     session_context = session_contexts.get(session_id, [
-        {"role": "system", "content": f"You are an friendly assistant built to help users understand and . This is the metadata of the dataset: {metadata_string}."}
+        {"role": "system", "content": f"""
+         You are a chatbot built to help uneducated people understand this dataset. You should take on the role of a teacher, treating the user as your student.
+         Keep your responses consise, and use natural language when explaining complex topics, unless the user requests detailed analysis.
+         You are a chatbot on the page of ICED-EVAL whose goal is:
+         "The International Centre for Evaluation and Development (ICED) is an independent, Africa-based and African-led not-for-profit think-tank that applies monitoring and evaluation (M&E) in the development sector. 
+         ICED uses the outputs of evaluation to contribute to and enhance development outcomes and impacts, concentrating on Africa, where the need for its expertise is greatest."
+         Here is a breif summary of the dataset:
+         {summary}
+         You are provided with the metadata of the dataset, which includes columns and data types.
+         Metadata of the dataset: {metadata_string}
+        """}
     ])
 
-    logger.info(f"Current session context: {session_context}")
-
     try:
-
         action_requested = check_if_action_requested(user_message)
 
-        logger.info(f'action_requested: {action_requested}')
-        
         if action_requested == 'GENERATE_GRAPH':
             prompt = f"""
             Find the metadata of the dataset from previous context.
@@ -153,12 +201,9 @@ def handle_chat_request(token, data):
             )
 
             response_data = response.json()
-            logger.info(response_data)
             bot_message = response_data['choices'][0]['message']['content'].strip()
             code_match = bot_message.split('```javascript')
 
-            logger.info(f"CHAT GPT CHAT RESPONSE: {response_data}")
-            
             if len(code_match) > 1:
                 summary = code_match[0]
                 code = code_match[1].split('```')[0].strip()
@@ -168,14 +213,13 @@ def handle_chat_request(token, data):
 
             code = code.replace("const ctx = document.getElementById('graph-container').getContext('2d');", '').strip()
 
-            # Update the session context
             session_context.append({'role': 'user', 'content': user_message})
             session_context.append({'role': 'assistant', 'content': bot_message})
             session_contexts[session_id] = session_context
 
-            return {'reply': bot_message, 'graphCode': code, 'summary': '', 'sessionId': session_id}
+            return {'reply': bot_message, 'graphCode': code, 'summary': summary, 'sessionId': session_id}
         
-        elif action_requested == 'GENERATE_PYTHON_CODE':
+        elif action_requested == 'PREFORM_PYTHON_ANALYSIS':
             prompt = f"""
             Find the metadata of the dataset from previous context.
             Please generate Python code to perform data analysis based on the user's request: {user_message}.
@@ -212,8 +256,6 @@ def handle_chat_request(token, data):
             bot_message = response_data['choices'][0]['message']['content'].strip()
             code_match = bot_message.split('```python')
 
-            logger.info(f"CHAT GPT CHAT RESPONSE: {response_data}")
-
             if len(code_match) > 1:
                 summary = code_match[0]
                 code = code_match[1].split('```')[0].strip()
@@ -221,9 +263,8 @@ def handle_chat_request(token, data):
                 summary = f'This is a data analysis for query: {user_message}'
                 code = bot_message
 
-            # Execute the generated Python code
             dataset_path = os.path.join('data', package, 'normalized_data', f"{filename.replace('.csv', '')}_normalized.csv")
-            dataset_path = dataset_path.replace('\\', '\\\\')  # Escape backslashes for Windows paths
+            dataset_path = dataset_path.replace('\\', '\\\\')
             python_code = f"""
 import pandas as pd
 
@@ -242,15 +283,12 @@ dataset = pd.read_csv('{dataset_path}')
             finally:
                 os.remove(temp_py_file_path)
 
-            logger.info(f"output: {output}")
-
-            # Generate a better response using GPT
             better_response_prompt = f"""
             The user has asked the following question: "{user_message}".
             Python code was ran, generating an output
             The output of the Python code is: "{output}".
             Please generate a concise and clear response to the user's question incorporating the output.
-            Please tailor your response around answering the question to someone who might not understand all scientific terms
+            Please tailor your response around answering the question to someone who might not understand all scientific terms.
             """
 
             response = requests.post(
@@ -272,7 +310,6 @@ dataset = pd.read_csv('{dataset_path}')
             response_data = response.json()
             better_response = response_data['choices'][0]['message']['content'].strip()
 
-            # Update the session context
             session_context.append({'role': 'user', 'content': user_message})
             session_context.append({'role': 'assistant', 'content': better_response})
             session_contexts[session_id] = session_context
@@ -280,45 +317,51 @@ dataset = pd.read_csv('{dataset_path}')
             return {'reply': better_response, 'sessionId': session_id}
 
         else:
-            # If no graph or python code is requested, just call ChatGPT with the user message.
-            prompt = f"""
-            Please respond to the user message in plain text. Try to keep the message under 3 sentences, if possible.
-            This message will be displayed in a chatbox capable of only displaying plain text.
-            User message: "{user_message} Find the metadata of the dataset from previous context."
-            """
+            # if session_id not in pdf_query_instances:
+            #     pdf_folder_path = os.path.join('data', package, 'pdfs')
+            #     if any(filename.endswith('.pdf') for filename in os.listdir(pdf_folder_path)):
+            #         pdf_query_instances[session_id] = PDFQuery(openai_api_key=os.getenv('ICED_DEMO_API_KEY'))
+            #         pdf_query_instances[session_id].ingest_folder(pdf_folder_path)
+            #     else:
+            #         pdf_query_instances[session_id] = None
 
-            headers = {
-                'Content-Type': 'application/json',
-                'Authorization': f"Bearer {os.getenv('ICED_DEMO_API_KEY')}",
-            }
+            pdf_query = None #pdf_query_instances[session_id]
 
-            response = requests.post(
-                'https://api.openai.com/v1/chat/completions',
-                json={
-                    'model': 'gpt-4o-2024-05-13',
-                    'messages': session_context + [
-                        {'role': 'user', 'content': prompt},
-                    ],
-                    'max_tokens': 1000,
-                    'n': 1,
-                    'stop': None,
-                    'temperature': 0.2,
-                },
-                headers=headers
-            )
+            if pdf_query:
+                response = pdf_query.ask(user_message, session_context)
+            else:
+                prompt = f"""
+                {user_message}
+                """
 
-            response_data = response.json()
+                headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': f"Bearer {os.getenv('ICED_DEMO_API_KEY')}",
+                }
 
-            logger.info(f"GPT RESPONSE: {response_data}")
+                response = requests.post(
+                    'https://api.openai.com/v1/chat/completions',
+                    json={
+                        'model': 'gpt-4o-2024-05-13',
+                        'messages': session_context + [
+                            {'role': 'user', 'content': prompt},
+                        ],
+                        'max_tokens': 1000,
+                        'n': 1,
+                        'stop': None,
+                        'temperature': 0.5,
+                    },
+                    headers=headers
+                )
 
-            bot_message = response_data['choices'][0]['message']['content'].strip()
+                response_data = response.json()
+                response = response_data['choices'][0]['message']['content'].strip()
 
-            # Update the session context
             session_context.append({'role': 'user', 'content': user_message})
-            session_context.append({'role': 'assistant', 'content': bot_message})
+            session_context.append({'role': 'assistant', 'content': response})
             session_contexts[session_id] = session_context
 
-            return {'reply': bot_message, 'sessionId': session_id}
+            return {'reply': response, 'sessionId': session_id}
     except Exception as e:
         logger.error(f"Error in handle_chat_request: {e}")
         return {'error': str(e)}
