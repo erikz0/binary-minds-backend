@@ -145,6 +145,12 @@ def serve_datainfo(package):
     datainfo_path = os.path.join('data', package)
     return send_from_directory(datainfo_path, 'datainfo.md')
 
+@app.route('/data-pdf/<package>', methods=['GET'])
+@token_required
+def serve_datapdf(package):
+    datapdf_path = os.path.join('data', package, 'pdfs')
+    return send_from_directory(datapdf_path, 'datapdf.pdf')
+
 @app.route('/normalized-data/<package>/<filename>', methods=['GET'])
 @token_required
 def serve_normalized_data(package, filename):
@@ -158,10 +164,10 @@ def serve_normalized_data(package, filename):
         data = data.fillna('')  # Fill NaN with an empty string or another placeholder
         normalized_data = data.to_dict(orient='records')
     else:
-        data_path = os.path.join('data', package, 'data', filename)
+        data_path = os.path.join('data', package, 'data', filename + '.csv')
         data = pd.read_csv(data_path)
         normalized_data = normalize_data(data.to_dict(orient='records'))
-        save_normalized_data(package, filename, normalized_data)
+        save_normalized_data(os.path.join('data', package), filename, normalized_data)
         #print(f"Normalized data: {normalized_data}")  # Logging the normalized data
     
     return jsonify(normalized_data)
@@ -175,9 +181,9 @@ def serve_metadata(package, filename):
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
         return jsonify(metadata)
-    data_path = os.path.join('data', package, 'data', filename)
-    metadata = generate_metadata_from_file(data_path)
-    save_metadata(package, filename, metadata)
+    data_path = os.path.join('data', package, 'data', filename + '.csv')
+    metadata, normalized_data = generate_metadata_from_file(data_path)
+    save_metadata(os.path.join('data', package), filename, metadata)
     return jsonify(metadata)
 
 @app.route('/bm-chat', methods=['POST'])

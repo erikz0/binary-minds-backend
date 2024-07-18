@@ -1,15 +1,35 @@
-Poor and non-existent infrastructure is widespread in Nigeria, which constrains market functionality
-and market access of rural farmers, mostly women, and worsens poverty and nutrition levels. Road
-infrastructure deficit is more pronounced in the rural areas where the bulk of agricultural activities reside
-alongside higher levels of malnutrition and poverty. More concerning still, women are responsible for a
-large percentage of total food production, yet face many constraints at every point in the food system
-which affects their productivity and ability to access markets. This is likely to disempower rural women
-and further worsen gender inequality concerns in Nigeria.
-In response to the problems of inadequate road infrastructure in rural areas, several development
-projects have focused on rural road provision, however, empirical studies linking road infrastructure
-to household nutrition, women empowerment and gender inequality are limited in Nigeria. This study
-therefore attempts to measure the impact of the rural road infrastructure component of the Value Chain
-Development Programme (VCDP) on household nutrition, women empowerment and gender equality.
-The VCDP was initiated by the International Fund for Agricultural Development (IFAD) in partnership with
-the Federal Government of Nigeria (FGN) to address the constraints along the commodity value chains
-of rice and cassava.
+Road infrastructure promotes inclusive growth, improves well-being, sustainable rural development and
+enhance empowerment of women and girls. Poor and non-existent infrastructure are widespread in Nigeria,
+which constrain market functionality and market access of rural farmers, mostly women, and worsen
+poverty and nutrition levels. Several development projects have provided rural roads although, empirical
+studies linking road infrastructure provision to household nutrition, women’s empowerment and gender
+inequality are limited in the case of Nigeria. This study therefore attempts to measure the impact of rural
+road infrastructure development on household nutrition, women’s empowerment and gender equality.
+Secondary data set of 1,294 respondents obtained from the Value Chain Development Programme (VCDP),
+spanning from 2019 to 2022 were used for the study, while qualitative information obtained from a rapid
+survey collected from six VCDP states (Ogun, Niger, Benue, Anambra, Ebonyi and Taraba) between
+December 2022 and February 2023 were used to validate the findings from the secondary data set.
+Household nutrition was assessed using household dietary diversity score (HDDS) and minimum dietary
+diversity score (MDDW) using standard procedures, Data were analysed using Gini coefficient and
+Difference-in-Difference. Hence, the respondents were categorized into beneficiaries and non-
+beneficiaries. The beneficiaries are households living in communities that have received the road
+intervention of VCDP, while the non-beneficiaries are households living in communities that have not
+received any road intervention. The VCDP road interventions commenced mainly in 2019 and were
+completed before or by 2022.
+The results of the study revealed that between 2019 and 2022, there were more rural households having
+access to credit, with higher amount of credit obtained, farm, non-farm and total incomes among households
+that benefitted from the VCDP road infrastructure than the non-beneficiaries. Moreover, the proportion of
+disempowered women reduced more for VCDP beneficiaries than non-beneficiaries, while the
+disempowerment gap among beneficiaries was less compared to non-beneficiaries. Furthermore, most
+households had low dietary diversity (DD) in 2019, however in 2022 their dietary diversity was high. A
+greater proportion of the beneficiary households had higher DD by 2022 relative to non-beneficiary
+households. Particularly, women beneficiaries that consumed five or more food groups increased more by
+2022, relative to non-beneficiary women. Finally, the VCDP road infrastructure provision had positive
+impacts on household DD, MDDW and women’s empowerment at p<0.01, p<0.05 and p<0.01 levels of
+significance, respectively, while it had mixed impacts on income inequality. Farm income of women was
+reduced relative to men, whereas non-farm and total incomes were increased among women beneficiaries
+than their non-beneficiary counterparts.
+Therefore, it was concluded that road infrastructure improved women and household nutrition, women’s
+empowerment, and total income inequality. Hence, government’s nutrition, empowerment and income
+inequality policy should incorporate road infrastructure provision. To improve farm income inequality,
+however, policy options should target birth control and other measures aimed at reducing household size.

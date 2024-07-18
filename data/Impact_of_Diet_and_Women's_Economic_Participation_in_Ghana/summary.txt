@@ -1,0 +1,57 @@
+Recent developments in information infrastructure and communication technologies have generated
+considerable interest over their use as a means of overcoming information constraints and improving
+welfare outcomes. However, little is known about the impact of the various kinds of information
+infrastructure on nutritious diets and women’s economic empowerment in sub-Saharan Africa. This
+study examined the impacts of such projects on consumption of nutritious diets and women’s economic
+empowerment in Ghana. It also assessed the effects of infrastructure support policies on access to
+information infrastructure and on these outcomes. To investigate these, we used the Marginal Treatment
+Effects (MTE) approach, which incorporates the observed and unobserved factors affecting placements
+of infrastructure projects, nutritious diets, and women’s economic empowerment to estimate the
+treatment effects, and the Policy Relevant Treatment Effects (PRTE). We used nationally representative
+datasets from the sixth and seventh rounds of the Ghana Living Standards Survey, consisting of 16,772
+and 14,009 households, respectively, to construct a pseudo-panel across communities. The GLSS
+datasets are panel in most communities but not panel at the level of households because the data were
+not collected from the same households but from the same communities in most of the communities
+across these rounds. These datasets were complemented with data from focus group discussions and key
+informant interviews. The findings of the study are:
+• The study revealed that residing in a community with internet cafés, ICT centres and community
+radios results in higher vitamin A-, protein-, and iron-rich food intake, respectively, but the
+effect of internet cafés on nutritious diet intake appears to be lower in magnitudes compared to
+the treatment effects of the other information infrastructure.
+• The study also revealed that in the untreated state, farm households were observed to be
+consuming significantly lower vitamin A-, protein-, and iron-rich foods compared to nonfarm
+households. However, the presence of the information infrastructure allows farm households to
+at least catch-up in nutritious diet intake with the nonfarm households.
+• The slopes of the MTE curves show a positive selection on gains for internet cafés and a mixed
+pattern of selection observed for ICT centres and community radios which also differs across
+the nutritious diet indicators.
+• Extension access on inputs access and use, and market prices of farm inputs and output are the
+important immediate mechanisms through which the information infrastructure affects
+nutritious diet intake, whereas farm output and farm revenue are the important intermediate
+mechanisms.
+• Regarding women’s economic empowerment, the results show that living in a community with
+an information infrastructure significantly increases the average empowerment index, gender
+parity index and thus, women’s economic empowerment, although the impacts of ICT centres
+and community radios are also slightly higher in magnitudes than the impacts of internet cafés.
+• Also, whereas women in farm households have a lower average empowerment index, gender
+parity index, and women’s economic empowerment than women in nonfarm households
+without any of the infrastructure, they tend to more than equalize, with the information
+infrastructure, by having a higher average empowerment index, gender parity index, and
+women’s economic empowerment than women of nonfarm households. And this is due to
+worse economic empowerment conditions of women in farm households in the untreated state.
+• The heterogeneities in the treatment effects reveal reverse selection, suggesting that women in
+communities that are least likely to have the information infrastructure tend to benefit more
+from having the infrastructure in terms of economic empowerment.
+v
+• The results further revealed that engagement in production, hours worked, and attendance of
+town meetings are potential impact mechanisms through which the information infrastructure
+affects women’s economic empowerment.
+• Finally, the Policy Relevant Treatment Effects (PRTE) indicate that expansion of electricity
+coverage increases the likelihood of the communities having internet café, ICT centre and
+community radio, and the magnitudes in increased likelihood of getting the information
+infrastructure are even higher for farm communities.
+• But more importantly, an expansion in electricity increases the impact of the information
+infrastructure on nutritious diet intake and women’s economic empowerment per household and
+women shifted, respectively, which is suggestive of the importance of an enabling environment
+on increasing farm households and women’s access to information infrastructure, and on
+improving their nutritious diet intake and women’s empowerment.

@@ -3,6 +3,7 @@ import requests
 import os
 import json
 import re
+import random
 from flask import Flask, request, jsonify
 
 # Function to normalize data
@@ -77,7 +78,11 @@ def generate_metadata_from_file(file):
         max_value = numeric_data.max() if not numeric_data.empty else None
         avg_value = numeric_data.mean() if not numeric_data.empty else None
         unique_values = column_data.unique().tolist()
-        potential_values = [v if pd.notna(v) else None for v in unique_values if len(unique_values) <= 20] or None
+        cleaned_values = [v if pd.notna(v) else None for v in unique_values]
+        if len(cleaned_values) <= 20:
+            potential_values = cleaned_values
+        else:
+            potential_values = random.sample(cleaned_values, 5)
         metadata.append({
             'name': column,
             'type': str(column_data.dtype),

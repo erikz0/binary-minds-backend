@@ -1,0 +1,55 @@
+Women play a significant role in household nutrition, so their empowerment is critical. Physical
+infrastructure such as market and storage facilities may offer a potential solution to enhance women’s
+empowerment, gender equality, and nutrition outcomes by increasing incomes, diversification, assets, and
+employment opportunities for the household, but the effects may vary depending on the type and mix of
+physical infrastructures. However, information on the impact of physical infrastructures on nutrition and
+gender outcomes is scant in the literature despite its policy relevance. Moreover, existing studies on the
+impact of physical infrastructure, focused mainly on measuring infrastructure as a single variable, and thus
+fail to capture the heterogeneity of multiple physical infrastructures. Against this backdrop, this study
+sought to examine the effects of using storage facility only, market facility only, and both infrastructures
+on (1) women’s empowerment, (2) gender equality, (3) nutrition, and (4) hidden hunger in Ghana.
+We revisited the Feed the Future data to generate two-round panel data using the first panel as the baseline
+and a subsample of the second-round data as the second panel. A subsample of 1,492 households was
+obtained for the analysis. The explanatory sequential mixed design was employed. This entailed collecting
+quantitative data, followed by qualitative interviews (Focus Group Discussions and Key Informant
+Interviews) to validate and interpret initial unexpected and surprising quantitative results. The quantitative
+data was analyzed using the multinomial endogenous switching regression (MESR) and multinomial
+endogenous treatment regression (METE) models, while the qualitative data was analyzed using content
+analysis. We controlled for time-varying unobserved fixed and random effects in the MESR and METE
+models using the Mundalk’s approach. Furthermore, we conducted mediation analysis to identify the
+pathways between infrastructure use and the outcomes using Hayes macro-application “PROCESS” for
+SPSS. We also conducted a falsification test to check the validity of the instruments used.
+The results show that use of market only, storage facility only, and both infrastructures have significant
+positive impact on hidden hunger (measured using available cereal per adult equivalent). The effect size is
+relatively large for households that use storage facility only than users of market facility only and both
+infrastructures. The results suggest that access to storage and market facilities may promote the production
+and consumption of energy-dense food than micronutrient-rich foods. The mediation analysis revealed that
+the pathway through which the use of both market and storage facilities may impact on hidden hunger is
+through lower crop diversification. The results also reveal that the use of market and storage facilities plays
+a significant role in nutrition outcomes. Specifically, the use of market facility only, storage facility only
+and both infrastructures significantly increase minimum dietary diversity of women (MDD-W) and child’s
+dietary diversity score (CDDS). The mediation analysis revealed that the pathways through which the use
+of market and storage facilities may impact on women’s dietary diversity were through higher crop
+diversification, increased income, and more accumulated assets. Likewise, the positive impact of market
+and storage facilities on CDDS was mediated through higher crop diversification and more accumulated
+assets. As expected, the use of both infrastructures has the largest impact on MDD-W and CDDS.
+Moreover, for child malnutrition, the use of market only, storage facility only, and both infrastructures are
+negatively associated with wasting and underweight in children under five. Except for the use of market
+only, the use of storage facility only and both infrastructures have significant and negative impact on
+stunting. The negative impact of use of both market and storage facilities on stunting was mediated through
+higher crop diversification.
+Further, the results show that households that used market facility only and both infrastructures attained
+gender equality and had significantly more empowered women than those who did not. However, use of
+storage facility only positively impacted on women’s empowerment but has no significant effect on gender
+equality. One important finding is that the effect size is relatively large for households that use both
+infrastructures as compared to those that use market facility only and storage facility only. This finding is
+plausible because different physical infrastructures have distinct strengths that, when combined, result in
+greater benefits for households The mediation analysis also shows that the mechanism and pathways
+through which the use of both infrastructures may improve women’s empowerment are through the
+ownership of asset, and lower crop diversification. We conclude that interventions that encourage the
+development of both market and storage infrastructure have the potential to empower women and promote
+gender equality more than a single infrastructure. Households, on the other hand, must be willing to use
+both infrastructures to support policies that promote women's empowerment and gender equality. The key
+implication of our findings is that using both market and storage facilities has substantial benefits on
+households and should be extended. Interventions to foster the provision of both market and storage
+facilities could improve nutrition and empower women, thus reducing malnutrition and gender inequality.
