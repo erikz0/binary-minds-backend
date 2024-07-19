@@ -16,7 +16,7 @@ from app.util.ingest_data import ingest_new_data, save_metadata, save_normalized
 application = app = Flask(__name__, static_folder='app/static/build')
 
 # Allow CORS for localhost and other origins
-cors = CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://www.binarytint.com/"]}})
+cors = CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "https://www.binarytint.com/", "http://localhost:5000"]}})
 
 # Increase the limit for JSON payloads
 app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB limit
