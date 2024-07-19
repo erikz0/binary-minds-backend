@@ -84,12 +84,14 @@ def check_if_action_requested(user_message, session_context):
             'max_tokens': 1000,
             'n': 1,
             'stop': None,
-            'temperature': 0.2,
+            'temperature': 0.1,
         },
         headers=headers
     )
 
     response_data = response.json()
+
+    logger.info(f"GPT response_data to action request: {response_data}")
 
     gpt_response = response_data['choices'][0]['message']['content'].strip()
 
@@ -198,6 +200,7 @@ def handle_chat_request(token, data):
             Please include extensive console log statements in the code for debugging of all variables printing as strings in neat format.
             The code should use the variable 'dataset' (already defined in the outer scope) to reference the data, and ensure the code uses this variable to populate the chart.
             The code should be ready to execute in a React component and render the graph inside a given HTML container with id 'graph-container'.
+            If you need to preform numerical operations on values in the dataset, assume values are read in as strings and convert them to the type you need.
             Ensure the code handles undefined or null values appropriately, avoiding errors such as trying to call methods on undefined or null values.
             Do not redeclare the 'dataset' variable in the code. Do not include import statements, React component definitions, or any other extraneous content. Only include the JavaScript code to initialize and render the chart inside the 'graph-container' element.
             Before giving the JavaScript code, could you also include a brief 1-2 sentence summary of the graph in this format:
@@ -219,7 +222,7 @@ def handle_chat_request(token, data):
                     'max_tokens': 1000,
                     'n': 1,
                     'stop': None,
-                    'temperature': 0.2,
+                    'temperature': 0.1,
                 },
                 headers=headers
             )
@@ -256,6 +259,7 @@ def handle_chat_request(token, data):
                 The code should reference the pre-defined pandas dataframe 'dataset' (already defined in the outer scope).
                 Ensure the code handles undefined or null values appropriately, avoiding errors such as trying to call methods on undefined or null values.
                 Keep in mind that the dataset might contain columns with non-numerical values, so workaround this if it is the case.
+                If you need to preform numerical operations on values in the dataset, assume values are read in as strings and convert them to the type you need.
                 Include import statements for any necessary libraries, such as scipy.stats for statistical tests.
                 Include print statements for all the output results.
                 Do not include any other extraneous content. Only include the Python code to perform the requested analysis.
@@ -277,12 +281,15 @@ def handle_chat_request(token, data):
                         'max_tokens': 2000,
                         'n': 1,
                         'stop': None,
-                        'temperature': 0.2,
+                        'temperature': 0.1,
                     },
                     headers=headers
                 )
 
                 response_data = response.json()
+
+                logger.info(f"response_data: {response_data}")
+
                 bot_message = response_data['choices'][0]['message']['content'].strip()
                 code_match = bot_message.split('```python')
 
@@ -342,7 +349,7 @@ dataset = pd.read_csv('{dataset_path}')
                     'max_tokens': 500,
                     'n': 1,
                     'stop': None,
-                    'temperature': 0.2,
+                    'temperature': 0.5,
                 },
                 headers=headers
             )
