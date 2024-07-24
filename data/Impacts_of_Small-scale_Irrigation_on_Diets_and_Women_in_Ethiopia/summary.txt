@@ -1,0 +1,26 @@
+Small-scale irrigation is increasingly recognized as a pivotal strategy for improving agricultural
+productivity and food security in sub-Saharan Africa, especially amidst growing climate
+variability and changes. Over the past decades, small-scale irrigation has expanded rapidly in
+sub-Saharan Africa, providing smallholder farmers with an opportunity to improve their
+livelihoods, diets and resilience to climate change. While existing evidence highlights its wide-
+ranging benefits, including improved food security, crop diversification, and employment
+opportunities, less attention has been devoted to understanding its effects on nutritious diets,
+women's empowerment, and gender equality. This study seeks to fill this gap by rigorously
+examining the causal impacts of small-scale irrigation on these critical dimensions, utilizing
+data from the "Megetch Pump Irrigation and Drainage Project (MPIDP)" in Ethiopia's Amhara
+Regional State. Employing a plot-level Geographic Regression Discontinuity (GRD) design
+and survey data, we estimate the causal impact of access to irrigation on women’s
+empowerment and nutrition diets, leveraging the unique topographical setup of the irrigation
+command area and canal construction. Our finding suggests that access to irrigation does not
+exhibit a significant impact on overall empowerment levels for both women and men. Gender
+parity among the beneficiaries remains largely unchanged. It is worth noting that empowerment
+levels were already relatively high in the study area, across various pro-WEAI indicators.
+Despite the overall impact, access to irrigation enhances women's likelihood of achieving
+empowerment in terms of decision-making power in productive activities and access to
+financial services. This instrumental agency measure suggests a positive step towards
+economic empowerment. However, there is a noteworthy decrease in some individual
+empowerment indicators, particularly in terms of respect among household members and self-
+efficacy. Even with observing a significant increase in dry-season crop production attributed to
+irrigation, there is no substantial evidence of improvement in nutritional outcomes. This result
+may be influenced by the government's focus on increasing wheat production, directing
+irrigated land towards this crop.
